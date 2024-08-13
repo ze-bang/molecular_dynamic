@@ -3,9 +3,9 @@ using DifferentialEquations
 using MPI
 using ClassicalSpinMC
 using HDF5
-
+using Einsum
 include("pyrochlore.jl")
-include("landau_lifshitz.jl")
+include("../parallel_tempering/landau_lifshitz.jl")
 #------------------------------------------
 # constants
 #------------------------------------------
@@ -174,16 +174,16 @@ end
 # convergence_field([1,1,0]/sqrt(2))
 # convergence_field([0,0,1]) 
 
+prefix = "Ce2Zr2O7"
+mc = simulated_annealing_pyrochlore(0.062, 0.063, 0.011, 0, 0, 2.18, 1.5, [1, 1, 0]/sqrt(2), 14*k_B, 0.03*k_B, 8, 1/2, "simulated_annealing_T=0.3K_B110=1.5T_L=8", "Ce2Zr2O7")
+sol = time_evolve!(mc, 1e3)
 
-mc = simulated_annealing_pyrochlore(0.062, 0.063, 0.011, 0, 0, 2.18, 1.5, [1, 1, 0]/sqrt(2), 20*k_B, 14*k_B, 8, 1/2, "simulated_annealing_T=14K_B110=1.5T_euler", "Ce2Zr2O7")
-print(size(mc.lattice.spins))
-sol = time_evolve!(mc, 1e5)
 tosave = Array{Float64, 3}(undef, size(sol.u,1), 3, mc.lattice.size)
 for i=1:size(sol.u,1)
     tosave[i,:,:] = sol.u[i]
 end
 
-file = h5open(string(mc.outpath[1:end-3], "_time_evolved.h5"), "w")
+file = h5open(string(mc.outpath[1:end-3], prefix, "_time_evolved.h5"), "w")
 file["spins"] = tosave
 file["t"] = sol.t
 file["site_positions"] = mc.lattice.site_positions

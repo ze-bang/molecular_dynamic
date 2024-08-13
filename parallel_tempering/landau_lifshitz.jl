@@ -102,14 +102,7 @@ end
 function time_evolve!(mc::MonteCarlo, T::Float64)
     lat = mc.lattice
     spins = lat.spins
-    H = similar(spins)
-    for i in 1:lat.size
-        t = get_local_field(mc.lattice, i)
-        H[1, i] = t[1]
-        H[2, i] = t[2]
-        H[3, i] = t[3]
-    end
-    prob = ODEProblem(landau_lifshitz_ODE!, spins, (0.0, T), H)
-    sol = solve(prob, Vern9())
+    prob = ODEProblem(landau_lifshitz_ODE!, spins, (0.0, T), lat)
+    sol = solve(prob, Tsit5(), dt=1e-2)
     return sol
 end
