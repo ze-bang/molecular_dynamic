@@ -1,11 +1,19 @@
+
+using MPI
+
+# MPI.Init()
+# comm = MPI.COMM_WORLD
+# size = MPI.Comm_size(comm)
+# rank = MPI.Comm_rank(comm)
+
 using LinearAlgebra
 using DifferentialEquations
-using MPI
 using ClassicalSpinMC
 using HDF5
 using Einsum
 include("pyrochlore.jl")
-include("../parallel_tempering/landau_lifshitz.jl")
+include("landau_lifshitz.jl")
+# include("../parallel_tempering/landau_lifshitz.jl")
 #------------------------------------------
 # constants
 #------------------------------------------
@@ -39,7 +47,7 @@ x = [[-2,1,1],[-2,-1,-1],[2,1,-1], [2,-1,1]]/sqrt(6)
 #------------------------------------------
 # set MC parameters
 #------------------------------------------
-t_thermalization= Int(1e6)
+t_thermalization= Int(1e4)
 t_deterministic = Int(1e6)
 t_measurement= Int(1e6)
 probe_rate=2000
@@ -48,13 +56,19 @@ overrelaxation=10
 report_interval = Int(1e4)
 checkpoint_rate=1000
 
-function simulated_annealing_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, B, n, T0, Target, L, S, outpath, outprefix)
+function simulated_annealing_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, B, n, T0, Target, L, S, outpath, outprefix, MD=false)
     
     #h in tesla
-    h1 = mu_B*B*(n'*z1) * [gxx, gyy, gzz]
-    h2 = mu_B*B*(n'*z2) * [gxx, gyy, gzz]
-    h3 = mu_B*B*(n'*z3) * [gxx, gyy, gzz]
-    h4 = mu_B*B*(n'*z4) * [gxx, gyy, gzz]
+    # h1 = mu_B*B*(n'*z1) * [gxx, gyy, gzz]
+    # h2 = mu_B*B*(n'*z2) * [gxx, gyy, gzz]
+    # h3 = mu_B*B*(n'*z3) * [gxx, gyy, gzz]
+    # h4 = mu_B*B*(n'*z4) * [gxx, gyy, gzz]
+
+    #h in J_parallel
+    h1 = B*(n'*z1) * [gxx, gyy, gzz]
+    h2 = B*(n'*z2) * [gxx, gyy, gzz]
+    h3 = B*(n'*z3) * [gxx, gyy, gzz]
+    h4 = B*(n'*z4) * [gxx, gyy, gzz]
     
     # create unit cell 
     P = Pyrochlore()
@@ -78,9 +92,20 @@ function simulated_annealing_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, B, n, T0, 
 
     # perform MC tasks 
     simulated_annealing!(mc, x ->T0*0.9^x, T0)
-    deterministic_updates!(mc) 
+    sol = time_evolve!(mc, 1e3)
 
+    tosave = Array{Float64, 3}(undef, size(sol.u,1), 3, mc.lattice.size)
+    for i=1:size(sol.u,1)
+        tosave[i,:,:] = sol.u[i]
+    end
+
+    file = h5open(string(mc.outpath[1:end-3], outprefix, "_time_evolved.h5"), "w")
+    file["spins"] = tosave
+    file["t"] = sol.t
+    file["site_positions"] = mc.lattice.site_positions
+    close(file)
     # write to file 
+    deterministic_updates!(mc) 
     write_MC_checkpoint(mc)
     return mc
 end
@@ -95,10 +120,16 @@ function parallel_tempering_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, B, n, Tmin,
     temp = exp10.(range(log10(Tmin), stop=log10(Tmax), length=commSize) ) 
     T = temp[rank+1]
     #h in tesla
-    h1 = mu_B*B*(n'*z1) * [gxx, gyy, gzz]
-    h2 = mu_B*B*(n'*z2) * [gxx, gyy, gzz]
-    h3 = mu_B*B*(n'*z3) * [gxx, gyy, gzz]
-    h4 = mu_B*B*(n'*z4) * [gxx, gyy, gzz]
+    # h1 = mu_B*B*(n'*z1) * [gxx, gyy, gzz]
+    # h2 = mu_B*B*(n'*z2) * [gxx, gyy, gzz]
+    # h3 = mu_B*B*(n'*z3) * [gxx, gyy, gzz]
+    # h4 = mu_B*B*(n'*z4) * [gxx, gyy, gzz]
+
+    #h in J_parallel
+    h1 = B*(n'*z1) * [gxx, gyy, gzz]
+    h2 = B*(n'*z2) * [gxx, gyy, gzz]
+    h3 = B*(n'*z3) * [gxx, gyy, gzz]
+    h4 = B*(n'*z4) * [gxx, gyy, gzz]
     
     # create unit cell 
     P = Pyrochlore()
@@ -118,7 +149,7 @@ function parallel_tempering_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, B, n, Tmin,
                     "report_interval"=>report_interval, "checkpoint_rate"=>checkpoint_rate)
 
     # create MC object 
-    mc = MonteCarlo(Target, lat, params, outpath=outpath, outprefix=outprefix)
+    mc = MonteCarlo(T, lat, params, outpath=outpath, outprefix=outprefix)
 
     # perform MC tasks 
     parallel_tempering!(mc, [0]) # output measurements on rank 0
@@ -173,23 +204,28 @@ end
 # convergence_field([1,1,1]/sqrt(3))
 # convergence_field([1,1,0]/sqrt(2))
 # convergence_field([0,0,1]) 
+ 
+num_runs = 1000
 
-prefix = "Ce2Zr2O7"
-mc = simulated_annealing_pyrochlore(0.062, 0.063, 0.011, 0, 0, 2.18, 1.5, [1, 1, 0]/sqrt(2), 14*k_B, 0.03*k_B, 8, 1/2, "simulated_annealing_T=0.3K_B110=1.5T_L=8", "Ce2Zr2O7")
-sol = time_evolve!(mc, 1e3)
+for i in 1:num_runs
+    prefix = string("configuration",i+200)
+    mc = simulated_annealing_pyrochlore(0.062/0.063, 1.0, 0.011/0.063, 0.0, 0.0, 2.18, 0.0, [1, 1, 0]/sqrt(2), 14.0, 0.03, 8, 1/2, "pyrochlore_CZO_T=0.03_B110=0.0T_L=8/", prefix, true)
+    # sol = time_evolve!(mc, 1e3)
 
-tosave = Array{Float64, 3}(undef, size(sol.u,1), 3, mc.lattice.size)
-for i=1:size(sol.u,1)
-    tosave[i,:,:] = sol.u[i]
+    # tosave = Array{Float64, 3}(undef, size(sol.u,1), 3, mc.lattice.size)
+    # for i=1:size(sol.u,1)
+    #     tosave[i,:,:] = sol.u[i]
+    # end
+
+    # file = h5open(string(mc.outpath[1:end-3], prefix, "_time_evolved.h5"), "w")
+    # file["spins"] = tosave
+    # file["t"] = sol.t
+    # file["site_positions"] = mc.lattice.site_positions
+    # close(file)
+
 end
-
-file = h5open(string(mc.outpath[1:end-3], prefix, "_time_evolved.h5"), "w")
-file["spins"] = tosave
-file["t"] = sol.t
-file["site_positions"] = mc.lattice.site_positions
-close(file)
-
-# parallel_tempering_pyrochlore(0.062, 0.063, 0.011, 0, 0, 2.18, 1.5, [1, 1, 0]/sqrt(2), 0.09*k_B, 14*k_B, 8, 1/2, "simulated_annealing_low_T_B110=1.5T", "Ce2Zr2O7")
+# parallel_tempering_pyrochlore(0.25, 0.5, 1.0, 0, 0, 2.18, 0.0, [1, 1, 0]/sqrt(2), 0.06, 0.06, 8, 1/2
+# , "/Users/zhengbangzhou/Library/CloudStorage/OneDrive-UniversityofToronto/PhD Stuff/Projects/molecular_dynamic/pyrochlore_T=0.06_L=8_parallel/", "Ce2Zr2O7")
 
 # n = [0, 0, 1]
 # scan_line(0.6, 1.0, 0.6, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 2, 1/2)

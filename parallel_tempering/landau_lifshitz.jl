@@ -101,7 +101,7 @@ end
 
 function time_evolve!(mc::MonteCarlo, T::Float64)
     lat = mc.lattice
-    spins = lat.spins
+    spins = deepcopy(lat.spins)
     prob = ODEProblem(landau_lifshitz_ODE!, spins, (0.0, T), lat)
     sol = solve(prob, Tsit5(), dt=1e-2)
     return sol
