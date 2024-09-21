@@ -184,7 +184,6 @@ function scan_line(Jxx, Jyy, Jzz, gxx, gyy, gzz, hmin, hmax, nScan, n, Target, L
         outprefix = string("/h_",dirString,"=",i)
         run_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, i, n, Target, L, S, outpath, outprefix)
     end
-
 end
 
 function convergence_field(n)
@@ -192,6 +191,50 @@ function convergence_field(n)
     scan_line(-0.2, 1.0, -0.2, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 4, 1/2)
     scan_line(0.2, 1.0, 0.2, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 4, 1/2)
     scan_line(0.6, 1.0, 0.6, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 4, 1/2)
+end
+
+
+function phase_diagram_Jpmpm_fixed(Jpmin, Jpmax, nJpm, hmin, hmax, nScan, Jpmpm, gxx, gyy, gzz, n, Target, L, S)
+    dirString = ""
+    if n == [1, 1, 1]/sqrt(3)
+        dirString = "111"
+    elseif n == [1, 1, 0]/sqrt(2)
+        dirString = "110"
+    elseif n == [0, 0, 1]
+        dirString = "001"
+    end
+    
+    MPI.Init()
+    comm = MPI.COMM_WORLD
+    size = MPI.Comm_size(comm)
+    rank = MPI.Comm_rank(comm)
+
+    hs = LinRange(hmin, hmax, nScan)
+    Jpm = LinRange(Jpmin, Jpmax, nJpm)
+    
+    param_config = Vector{Tuple{Float64, Float64}}(nScan*nJpm, 2)
+    for i in range(1, stop=nJpm)
+        for j in range(1, stop=nScan)
+            param_config[(i-1)*nScan+j] = (Jpm[i], hs[j])
+        end
+    end
+
+
+    nb = nScan/size
+
+    leftK = Int16(rank*nb)
+    rightK = Int16((rank+1)*nb)
+
+    currJH = param_config[leftK+1:rightK]
+    for i in currJH
+        current_Jpm = i[1]
+        current_h = i[2]
+        Jxx = -2*(current_Jpm + Jpmpm)
+        Jyy = 1
+        Jzz = 2*(Jpmpm - current_Jpm)
+        outpath   = string(pwd(), "/Jpm_", current_Jpm, "_Jpmpm_", Jpmpm, "_h_", current_h, "field_direction_", dirString)
+        run_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, i, n, Target, L, S, outpath)
+    end
 end
 
 # run_pyrochlore(-0.6, 1.0, -0.6, 0, 0, 1, 0.0, [1, 1, 1]/sqrt(3), 1e-7, 1, 1/2, "test", "")
