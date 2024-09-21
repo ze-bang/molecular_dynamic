@@ -92,18 +92,18 @@ function simulated_annealing_pyrochlore(Jxx::Float64, Jyy::Float64, Jzz::Float64
 
     # perform MC tasks 
     simulated_annealing!(mc, x ->T0*0.9^x, T0)
-    sol = time_evolve!(mc, 1e3)
-
-    tosave = Array{Float64, 3}(undef, size(sol.u,1), 3, mc.lattice.size)
-    for i=1:size(sol.u,1)
-        tosave[i,:,:] = sol.u[i]
+    if MD
+        sol = time_evolve!(mc, 1e3)
+        tosave = Array{Float64, 3}(undef, size(sol.u,1), 3, mc.lattice.size)
+        for i=1:size(sol.u,1)
+            tosave[i,:,:] = sol.u[i]
+        end        
+        file = h5open(string(mc.outpath[1:end-3], outprefix, "_time_evolved.h5"), "w")
+        file["spins"] = tosave
+        file["t"] = sol.t
+        file["site_positions"] = mc.lattice.site_positions
+        close(file)
     end
-
-    file = h5open(string(mc.outpath[1:end-3], outprefix, "_time_evolved.h5"), "w")
-    file["spins"] = tosave
-    file["t"] = sol.t
-    file["site_positions"] = mc.lattice.site_positions
-    close(file)
     # write to file 
     deterministic_updates!(mc) 
     write_MC_checkpoint(mc)
@@ -269,7 +269,7 @@ end
 # end
 
 
-phase_diagram_Jpmpm_fixed(-0.5, 0.05, 5, 0.0, 2.0, 5, 0.0, 0.0, 0.0, 2.18, [1, 1, 0]/sqrt(2), 14, 0.06, 8, 1/2, "/Users/zhengbangzhou/Library/CloudStorage/OneDrive-UniversityofToronto/PhD Stuff/Projects/molecular_dynamic/pyrochlore_T=0.06_L=8_parallel/")
+phase_diagram_Jpmpm_fixed(-0.5, 0.05, 5, 0.0, 2.0, 5, 0.0, 0.0, 0.0, 2.18, [1, 1, 0]/sqrt(2), 14.0, 0.06, 8, 1/2, "/Users/zhengbangzhou/Library/CloudStorage/OneDrive-UniversityofToronto/PhD Stuff/Projects/molecular_dynamic/pyrochlore_T=0.06_L=8_parallel/")
 
 # parallel_tempering_pyrochlore(0.25, 0.5, 1.0, 0, 0, 2.18, 0.0, [1, 1, 0]/sqrt(2), 0.06, 0.06, 8, 1/2
 # , "/Users/zhengbangzhou/Library/CloudStorage/OneDrive-UniversityofToronto/PhD Stuff/Projects/molecular_dynamic/pyrochlore_T=0.06_L=8_parallel/", "Ce2Zr2O7")
