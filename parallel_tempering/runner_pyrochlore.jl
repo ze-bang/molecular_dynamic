@@ -56,7 +56,7 @@ overrelaxation=10
 report_interval = Int(1e4)
 checkpoint_rate=1000
 
-function simulated_annealing_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, B, n, T0, Target, L, S, outpath, outprefix, MD=false)
+function simulated_annealing_pyrochlore(Jxx::Float64, Jyy::Float64, Jzz::Float64, gxx, gyy, gzz, B, n, T0, Target, L, S, outpath, outprefix, MD=false)
     
     #h in tesla
     # h1 = mu_B*B*(n'*z1) * [gxx, gyy, gzz]
@@ -194,7 +194,7 @@ function convergence_field(n)
 end
 
 
-function phase_diagram_Jpmpm_fixed(Jpmin, Jpmax, nJpm, hmin, hmax, nScan, Jpmpm, gxx, gyy, gzz, n, Target, L, S)
+function phase_diagram_Jpmpm_fixed(Jpmin::Float64, Jpmax::Float64, nJpm, hmin::Float64, hmax::Float64, nScan::Int64, Jpmpm::Float64, gxx, gyy, gzz, n, T0, Target, L, S, tosave)
     dirString = ""
     if n == [1, 1, 1]/sqrt(3)
         dirString = "111"
@@ -212,7 +212,7 @@ function phase_diagram_Jpmpm_fixed(Jpmin, Jpmax, nJpm, hmin, hmax, nScan, Jpmpm,
     hs = LinRange(hmin, hmax, nScan)
     Jpm = LinRange(Jpmin, Jpmax, nJpm)
     
-    param_config = Vector{Tuple{Float64, Float64}}(nScan*nJpm, 2)
+    param_config = Vector{Tuple{Float64, Float64}}(undef, nJpm*nScan)
     for i in range(1, stop=nJpm)
         for j in range(1, stop=nScan)
             param_config[(i-1)*nScan+j] = (Jpm[i], hs[j])
@@ -230,10 +230,10 @@ function phase_diagram_Jpmpm_fixed(Jpmin, Jpmax, nJpm, hmin, hmax, nScan, Jpmpm,
         current_Jpm = i[1]
         current_h = i[2]
         Jxx = -2*(current_Jpm + Jpmpm)
-        Jyy = 1
+        Jyy = 1.0
         Jzz = 2*(Jpmpm - current_Jpm)
-        outpath   = string(pwd(), "/Jpm_", current_Jpm, "_Jpmpm_", Jpmpm, "_h_", current_h, "field_direction_", dirString)
-        run_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, i, n, Target, L, S, outpath)
+        outprefix   = string(pwd(), "/Jpm_", current_Jpm, "_Jpmpm_", Jpmpm, "_h_", current_h, "field_direction_", dirString)
+        simulated_annealing_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, current_h, n, T0, Target, L, S, tosave, outprefix)
     end
 end
 
@@ -248,25 +248,29 @@ end
 # convergence_field([1,1,0]/sqrt(2))
 # convergence_field([0,0,1]) 
  
-num_runs = 1000
+# num_runs = 1000
 
-for i in 1:num_runs
-    prefix = string("configuration",i+200)
-    mc = simulated_annealing_pyrochlore(0.062/0.063, 1.0, 0.011/0.063, 0.0, 0.0, 2.18, 0.0, [1, 1, 0]/sqrt(2), 14.0, 0.03, 8, 1/2, "pyrochlore_CZO_T=0.03_B110=0.0T_L=8/", prefix, true)
-    # sol = time_evolve!(mc, 1e3)
+# for i in 1:num_runs
+#     prefix = string("configuration",i+200)
+#     mc = simulated_annealing_pyrochlore(0.062/0.063, 1.0, 0.011/0.063, 0.0, 0.0, 2.18, 0.0, [1, 1, 0]/sqrt(2), 14.0, 0.03, 8, 1/2, "pyrochlore_CZO_T=0.03_B110=0.0T_L=8/", prefix, true)
+#     # sol = time_evolve!(mc, 1e3)
 
-    # tosave = Array{Float64, 3}(undef, size(sol.u,1), 3, mc.lattice.size)
-    # for i=1:size(sol.u,1)
-    #     tosave[i,:,:] = sol.u[i]
-    # end
+#     # tosave = Array{Float64, 3}(undef, size(sol.u,1), 3, mc.lattice.size)
+#     # for i=1:size(sol.u,1)
+#     #     tosave[i,:,:] = sol.u[i]
+#     # end
 
-    # file = h5open(string(mc.outpath[1:end-3], prefix, "_time_evolved.h5"), "w")
-    # file["spins"] = tosave
-    # file["t"] = sol.t
-    # file["site_positions"] = mc.lattice.site_positions
-    # close(file)
+#     # file = h5open(string(mc.outpath[1:end-3], prefix, "_time_evolved.h5"), "w")
+#     # file["spins"] = tosave
+#     # file["t"] = sol.t
+#     # file["site_positions"] = mc.lattice.site_positions
+#     # close(file)
 
-end
+# end
+
+
+phase_diagram_Jpmpm_fixed(-0.5, 0.05, 5, 0.0, 2.0, 5, 0.0, 0.0, 0.0, 2.18, [1, 1, 0]/sqrt(2), 14, 0.06, 8, 1/2, "pyrochlore_CZO_phase_diagram_T=0.06_L=8/")
+
 # parallel_tempering_pyrochlore(0.25, 0.5, 1.0, 0, 0, 2.18, 0.0, [1, 1, 0]/sqrt(2), 0.06, 0.06, 8, 1/2
 # , "/Users/zhengbangzhou/Library/CloudStorage/OneDrive-UniversityofToronto/PhD Stuff/Projects/molecular_dynamic/pyrochlore_T=0.06_L=8_parallel/", "Ce2Zr2O7")
 
