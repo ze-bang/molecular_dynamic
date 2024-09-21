@@ -232,7 +232,7 @@ function phase_diagram_Jpmpm_fixed(Jpmin::Float64, Jpmax::Float64, nJpm, hmin::F
         Jxx = -2*(current_Jpm + Jpmpm)
         Jyy = 1.0
         Jzz = 2*(Jpmpm - current_Jpm)
-        outprefix   = string(pwd(), "/Jpm_", current_Jpm, "_Jpmpm_", Jpmpm, "_h_", current_h, "field_direction_", dirString)
+        outprefix   = string("Jpm_", current_Jpm, "_Jpmpm_", Jpmpm, "_h_", current_h, "field_direction_", dirString)
         simulated_annealing_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, current_h, n, T0, Target, L, S, tosave, outprefix)
     end
 end
@@ -269,7 +269,7 @@ end
 # end
 
 
-phase_diagram_Jpmpm_fixed(-0.5, 0.05, 5, 0.0, 2.0, 5, 0.0, 0.0, 0.0, 2.18, [1, 1, 0]/sqrt(2), 14, 0.06, 8, 1/2, "pyrochlore_CZO_phase_diagram_T=0.06_L=8/")
+phase_diagram_Jpmpm_fixed(-0.5, 0.05, 5, 0.0, 2.0, 5, 0.0, 0.0, 0.0, 2.18, [1, 1, 0]/sqrt(2), 14, 0.06, 8, 1/2, "/Users/zhengbangzhou/Library/CloudStorage/OneDrive-UniversityofToronto/PhD Stuff/Projects/molecular_dynamic/pyrochlore_T=0.06_L=8_parallel/")
 
 # parallel_tempering_pyrochlore(0.25, 0.5, 1.0, 0, 0, 2.18, 0.0, [1, 1, 0]/sqrt(2), 0.06, 0.06, 8, 1/2
 # , "/Users/zhengbangzhou/Library/CloudStorage/OneDrive-UniversityofToronto/PhD Stuff/Projects/molecular_dynamic/pyrochlore_T=0.06_L=8_parallel/", "Ce2Zr2O7")
