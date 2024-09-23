@@ -276,7 +276,7 @@ end
 # end
 
 
-phase_diagram_Jpmpm_fixed(-0.5, 0.05, 5, 0.0, 2.0, 5, 0.0, 0.0, 0.0, 2.18, [1, 1, 0]/sqrt(2), 14.0, 0.06, 8, 1/2, "/Users/zhengbangzhou/Library/CloudStorage/OneDrive-UniversityofToronto/PhD Stuff/Projects/molecular_dynamic/pyrochlore_T=0.06_L=8_parallel/")
+# phase_diagram_Jpmpm_fixed(-0.5, 0.05, 5, 0.0, 2.0, 5, 0.0, 0.0, 0.0, 2.18, [1, 1, 0]/sqrt(2), 14.0, 0.06, 8, 1/2, "/Users/zhengbangzhou/Library/CloudStorage/OneDrive-UniversityofToronto/PhD Stuff/Projects/molecular_dynamic/pyrochlore_T=0.06_L=8_parallel/")
 
 # parallel_tempering_pyrochlore(0.25, 0.5, 1.0, 0, 0, 2.18, 0.0, [1, 1, 0]/sqrt(2), 0.06, 0.06, 8, 1/2
 # , "/Users/zhengbangzhou/Library/CloudStorage/OneDrive-UniversityofToronto/PhD Stuff/Projects/molecular_dynamic/pyrochlore_T=0.06_L=8_parallel/", "Ce2Zr2O7")
