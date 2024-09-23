@@ -1,3 +1,10 @@
+import Pkg
+Pkg.add(path="/home/zhouzb79/projects/def-ybkim/zhouzb79/molecular_dynamics/ClassicalSpinMC.jl")
+Pkg.add("DifferentialEquations")
+Pkg.add("LinearAlgebra")
+Pkg.add("HDF5")
+Pkg.add("Einsum")
+Pkg.add("MPI")
 
 using MPI
 
@@ -194,41 +201,3 @@ function convergence_field(n)
     scan_line(0.6, 1.0, 0.6, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 4, 1/2)
 end
 
-# run_pyrochlore(-0.6, 1.0, -0.6, 0, 0, 1, 0.0, [1, 1, 1]/sqrt(3), 1e-7, 1, 1/2, "test", "")
-
-# scan_line(-0.6, 1.0, -0.6, 0, 0, 1, 0.0, 1.0, 40, [1, 1, 0]/sqrt(2), 1e-7, 4, 1/2)
-# scan_line(0.6, 1.0, 0.6, 0, 0, 1, 0.0, 1.0, 40, [1, 1, 0]/sqrt(2), 1e-7, 2, 1/2)
-# scan_line(-0.6, 1.0, -0.6, 0, 0, 1, 0.0, 1.0, 40, [0, 0, 1], 1e-7, 2, 1/2)
-# scan_line(0.6, 1.0, 0.6, 0, 0, 1, 0.0, 1.0, 40, [0, 0, 1], 1e-7, 2, 1/2)
-
-# convergence_field([1,1,1]/sqrt(3))
-# convergence_field([1,1,0]/sqrt(2))
-# convergence_field([0,0,1]) 
- 
-num_runs = 1000
-
-for i in 1:num_runs
-    prefix = string("configuration",i+200)
-    mc = simulated_annealing_pyrochlore(0.062/0.063, 1.0, 0.011/0.063, 0.0, 0.0, 2.18, 0.0, [1, 1, 0]/sqrt(2), 14.0, 0.03, 8, 1/2, "pyrochlore_CZO_T=0.03_B110=0.0T_L=8/", prefix, true)
-    # sol = time_evolve!(mc, 1e3)
-
-    # tosave = Array{Float64, 3}(undef, size(sol.u,1), 3, mc.lattice.size)
-    # for i=1:size(sol.u,1)
-    #     tosave[i,:,:] = sol.u[i]
-    # end
-
-    # file = h5open(string(mc.outpath[1:end-3], prefix, "_time_evolved.h5"), "w")
-    # file["spins"] = tosave
-    # file["t"] = sol.t
-    # file["site_positions"] = mc.lattice.site_positions
-    # close(file)
-
-end
-# parallel_tempering_pyrochlore(0.25, 0.5, 1.0, 0, 0, 2.18, 0.0, [1, 1, 0]/sqrt(2), 0.06, 0.06, 8, 1/2
-# , "/Users/zhengbangzhou/Library/CloudStorage/OneDrive-UniversityofToronto/PhD Stuff/Projects/molecular_dynamic/pyrochlore_T=0.06_L=8_parallel/", "Ce2Zr2O7")
-
-# n = [0, 0, 1]
-# scan_line(0.6, 1.0, 0.6, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 2, 1/2)
-# scan_line(0.2, 1.0, 0.2, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 2, 1/2)
-# scan_line(-0.2, 1.0, -0.2, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 2, 1/2)
-# scan_line(-0.6, 1.0, -0.6, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 2, 1/2)
