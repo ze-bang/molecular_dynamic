@@ -200,8 +200,6 @@ function convergence_field(n)
     scan_line(0.6, 1.0, 0.6, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 4, 1/2)
 end
 
-<<<<<<< HEAD
-=======
 
 function phase_diagram_Jpmpm_fixed(Jpmin::Float64, Jpmax::Float64, nJpm, hmin::Float64, hmax::Float64, nScan::Int64, Jpmpm::Float64, gxx, gyy, gzz, n, T0, Target, L, S, tosave)
     dirString = ""
@@ -288,4 +286,3 @@ phase_diagram_Jpmpm_fixed(-0.5, 0.05, 5, 0.0, 2.0, 5, 0.0, 0.0, 0.0, 2.18, [1, 1
 # scan_line(0.2, 1.0, 0.2, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 2, 1/2)
 # scan_line(-0.2, 1.0, -0.2, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 2, 1/2)
 # scan_line(-0.6, 1.0, -0.6, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 2, 1/2)
->>>>>>> 68ecafd0f6047014f8fe897b5a70376d37300b2f
