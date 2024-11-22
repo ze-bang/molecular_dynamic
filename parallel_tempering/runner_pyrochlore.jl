@@ -1,12 +1,10 @@
-import Pkg
-Pkg.add(path="/home/zhouzb79/projects/def-ybkim/zhouzb79/molecular_dynamics/ClassicalSpinMC.jl")
-Pkg.add("DifferentialEquations")
-Pkg.add("LinearAlgebra")
-Pkg.add("HDF5")
-Pkg.add("Einsum")
-Pkg.add("MPI")
-
-using MPI
+# using Pkg
+# Pkg.add(path="/home/zhouzb79/projects/def-ybkim/zhouzb79/molecular_dynamics/ClassicalSpinMC.jl")
+# Pkg.add("DifferentialEquations")
+# Pkg.add("LinearAlgebra")
+# Pkg.add("HDF5")
+# Pkg.add("Einsum")
+# Pkg.add("MPI")
 
 # MPI.Init()
 # comm = MPI.COMM_WORLD
@@ -117,132 +115,128 @@ function simulated_annealing_pyrochlore(Jxx::Float64, Jyy::Float64, Jzz::Float64
     return mc
 end
 
-function parallel_tempering_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, B, n, Tmin, Tmax, L, S, outpath, outprefix)
-    MPI.Initialized() || MPI.Init()
-    commSize = MPI.Comm_size(MPI.COMM_WORLD)
-    rank = MPI.Comm_rank(MPI.COMM_WORLD)
+# function parallel_tempering_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, B, n, Tmin, Tmax, L, S, outpath, outprefix)
+#     MPI.Initialized() || MPI.Init()
+#     commSize = MPI.Comm_size(MPI.COMM_WORLD)
+#     rank = MPI.Comm_rank(MPI.COMM_WORLD)
 
-    # get temperature on rank 
-    # create equal logarithmically spaced temperatures and get temperature on current rank 
-    temp = exp10.(range(log10(Tmin), stop=log10(Tmax), length=commSize) ) 
-    T = temp[rank+1]
-    #h in tesla
-    # h1 = mu_B*B*(n'*z1) * [gxx, gyy, gzz]
-    # h2 = mu_B*B*(n'*z2) * [gxx, gyy, gzz]
-    # h3 = mu_B*B*(n'*z3) * [gxx, gyy, gzz]
-    # h4 = mu_B*B*(n'*z4) * [gxx, gyy, gzz]
+#     # get temperature on rank 
+#     # create equal logarithmically spaced temperatures and get temperature on current rank 
+#     temp = exp10.(range(log10(Tmin), stop=log10(Tmax), length=commSize) ) 
+#     T = temp[rank+1]
+#     #h in tesla
+#     # h1 = mu_B*B*(n'*z1) * [gxx, gyy, gzz]
+#     # h2 = mu_B*B*(n'*z2) * [gxx, gyy, gzz]
+#     # h3 = mu_B*B*(n'*z3) * [gxx, gyy, gzz]
+#     # h4 = mu_B*B*(n'*z4) * [gxx, gyy, gzz]
 
-    #h in J_parallel
-    h1 = B*(n'*z1) * [gxx, gyy, gzz]
-    h2 = B*(n'*z2) * [gxx, gyy, gzz]
-    h3 = B*(n'*z3) * [gxx, gyy, gzz]
-    h4 = B*(n'*z4) * [gxx, gyy, gzz]
+#     #h in J_parallel
+#     h1 = B*(n'*z1) * [gxx, gyy, gzz]
+#     h2 = B*(n'*z2) * [gxx, gyy, gzz]
+#     h3 = B*(n'*z3) * [gxx, gyy, gzz]
+#     h4 = B*(n'*z4) * [gxx, gyy, gzz]
     
-    # create unit cell 
-    P = Pyrochlore()
+#     # create unit cell 
+#     P = Pyrochlore()
 
-    # add Hamiltonian terms
-    interactions = Dict("Jxx"=>Jxx, "Jyy"=>Jyy, "Jzz"=>Jzz)
-    addInteractionsLocal!(P, interactions) # bilinear spin term 
-    addZeemanCoupling!(P, 1, h1) # add zeeman coupling to each basis site
-    addZeemanCoupling!(P, 2, h2)
-    addZeemanCoupling!(P, 3, h3)
-    addZeemanCoupling!(P, 4, h4)
-    # generate lattice
-    lat = Lattice((L,L,L), P, S, bc="periodic") 
+#     # add Hamiltonian terms
+#     interactions = Dict("Jxx"=>Jxx, "Jyy"=>Jyy, "Jzz"=>Jzz)
+#     addInteractionsLocal!(P, interactions) # bilinear spin term 
+#     addZeemanCoupling!(P, 1, h1) # add zeeman coupling to each basis site
+#     addZeemanCoupling!(P, 2, h2)
+#     addZeemanCoupling!(P, 3, h3)
+#     addZeemanCoupling!(P, 4, h4)
+#     # generate lattice
+#     lat = Lattice((L,L,L), P, S, bc="periodic") 
 
-    params = Dict("t_thermalization"=>t_thermalization, "t_deterministic"=>t_deterministic, "t_measurement"=>t_measurement, 
-                    "probe_rate"=>probe_rate, "swap_rate"=>swap_rate, "overrelaxation_rate"=>overrelaxation, 
-                    "report_interval"=>report_interval, "checkpoint_rate"=>checkpoint_rate)
+#     params = Dict("t_thermalization"=>t_thermalization, "t_deterministic"=>t_deterministic, "t_measurement"=>t_measurement, 
+#                     "probe_rate"=>probe_rate, "swap_rate"=>swap_rate, "overrelaxation_rate"=>overrelaxation, 
+#                     "report_interval"=>report_interval, "checkpoint_rate"=>checkpoint_rate)
 
-    # create MC object 
-    mc = MonteCarlo(T, lat, params, outpath=outpath, outprefix=outprefix)
+#     # create MC object 
+#     mc = MonteCarlo(T, lat, params, outpath=outpath, outprefix=outprefix)
 
-    # perform MC tasks 
-    parallel_tempering!(mc, [0]) # output measurements on rank 0
-    return mc
-end
+#     # perform MC tasks 
+#     parallel_tempering!(mc, [0]) # output measurements on rank 0
+#     return mc
+# end
+# function scan_line(Jxx, Jyy, Jzz, gxx, gyy, gzz, hmin, hmax, nScan, n, Target, L, S)
+#     dirString = ""
+#     if n == [1, 1, 1]/sqrt(3)
+#         dirString = "111"
+#     elseif n == [1, 1, 0]/sqrt(2)
+#         dirString = "110"
+#     elseif n == [0, 0, 1]
+#         dirString = "001"
+#     end
+#     MPI.Init()
+#     comm = MPI.COMM_WORLD
+#     size = MPI.Comm_size(comm)
+#     rank = MPI.Comm_rank(comm)
 
-function scan_line(Jxx, Jyy, Jzz, gxx, gyy, gzz, hmin, hmax, nScan, n, Target, L, S)
-    dirString = ""
-    if n == [1, 1, 1]/sqrt(3)
-        dirString = "111"
-    elseif n == [1, 1, 0]/sqrt(2)
-        dirString = "110"
-    elseif n == [0, 0, 1]
-        dirString = "001"
-    end
+#     hs = LinRange(hmin, hmax, nScan)
+
+#     nb = nScan/size
+
+#     leftK = Int16(rank*nb)
+#     rightK = Int16((rank+1)*nb)
+
+#     currJH = hs[leftK+1:rightK]
+#     outpath   = string(pwd(), "/Jxx_", Jxx, "_Jyy_", Jyy, "_Jzz_", Jzz, "_gxx_", gxx, "_gyy_", gyy, "_gzz_", gzz)
+#     for i in currJH
+#         outprefix = string("/h_",dirString,"=",i)
+#         run_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, i, n, Target, L, S, outpath, outprefix)
+#     end
+# end
+
+# function convergence_field(n)
+#     scan_line(-0.6, 1.0, -0.6, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 4, 1/2)
+#     scan_line(-0.2, 1.0, -0.2, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 4, 1/2)
+#     scan_line(0.2, 1.0, 0.2, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 4, 1/2)
+#     scan_line(0.6, 1.0, 0.6, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 4, 1/2)
+# end
+
+# function phase_diagram_Jpmpm_fixed(Jpmin::Float64, Jpmax::Float64, nJpm, hmin::Float64, hmax::Float64, nScan::Int64, Jpmpm::Float64, gxx, gyy, gzz, n, T0, Target, L, S, tosave)
+#     dirString = ""
+#     if n == [1, 1, 1]/sqrt(3)
+#         dirString = "111"
+#     elseif n == [1, 1, 0]/sqrt(2)
+#         dirString = "110"
+#     elseif n == [0, 0, 1]
+#         dirString = "001"
+#     end
+#     MPI.Init()
+#     comm = MPI.COMM_WORLD
+#     size = MPI.Comm_size(comm)
+#     rank = MPI.Comm_rank(comm)
+
+#     hs = LinRange(hmin, hmax, nScan)
+#     Jpm = LinRange(Jpmin, Jpmax, nJpm)
     
-    MPI.Init()
-    comm = MPI.COMM_WORLD
-    size = MPI.Comm_size(comm)
-    rank = MPI.Comm_rank(comm)
-
-    hs = LinRange(hmin, hmax, nScan)
-
-    nb = nScan/size
-
-    leftK = Int16(rank*nb)
-    rightK = Int16((rank+1)*nb)
-
-    currJH = hs[leftK+1:rightK]
-    outpath   = string(pwd(), "/Jxx_", Jxx, "_Jyy_", Jyy, "_Jzz_", Jzz, "_gxx_", gxx, "_gyy_", gyy, "_gzz_", gzz)
-    for i in currJH
-        outprefix = string("/h_",dirString,"=",i)
-        run_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, i, n, Target, L, S, outpath, outprefix)
-    end
-end
-
-function convergence_field(n)
-    scan_line(-0.6, 1.0, -0.6, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 4, 1/2)
-    scan_line(-0.2, 1.0, -0.2, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 4, 1/2)
-    scan_line(0.2, 1.0, 0.2, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 4, 1/2)
-    scan_line(0.6, 1.0, 0.6, 0, 0, 1, 0.0, 2.0, 40, n, 1e-7, 4, 1/2)
-end
+#     param_config = Vector{Tuple{Float64, Float64}}(undef, nJpm*nScan)
+#     for i in range(1, stop=nJpm)
+#         for j in range(1, stop=nScan)
+#             param_config[(i-1)*nScan+j] = (Jpm[i], hs[j])
+#         end
+#     end
 
 
-function phase_diagram_Jpmpm_fixed(Jpmin::Float64, Jpmax::Float64, nJpm, hmin::Float64, hmax::Float64, nScan::Int64, Jpmpm::Float64, gxx, gyy, gzz, n, T0, Target, L, S, tosave)
-    dirString = ""
-    if n == [1, 1, 1]/sqrt(3)
-        dirString = "111"
-    elseif n == [1, 1, 0]/sqrt(2)
-        dirString = "110"
-    elseif n == [0, 0, 1]
-        dirString = "001"
-    end
-    
-    MPI.Init()
-    comm = MPI.COMM_WORLD
-    size = MPI.Comm_size(comm)
-    rank = MPI.Comm_rank(comm)
+#     nb = nScan/size
 
-    hs = LinRange(hmin, hmax, nScan)
-    Jpm = LinRange(Jpmin, Jpmax, nJpm)
-    
-    param_config = Vector{Tuple{Float64, Float64}}(undef, nJpm*nScan)
-    for i in range(1, stop=nJpm)
-        for j in range(1, stop=nScan)
-            param_config[(i-1)*nScan+j] = (Jpm[i], hs[j])
-        end
-    end
+#     leftK = Int16(rank*nb)
+#     rightK = Int16((rank+1)*nb)
 
-
-    nb = nScan/size
-
-    leftK = Int16(rank*nb)
-    rightK = Int16((rank+1)*nb)
-
-    currJH = param_config[leftK+1:rightK]
-    for i in currJH
-        current_Jpm = i[1]
-        current_h = i[2]
-        Jxx = -2*(current_Jpm + Jpmpm)
-        Jyy = 1.0
-        Jzz = 2*(Jpmpm - current_Jpm)
-        outprefix   = string("Jpm_", current_Jpm, "_Jpmpm_", Jpmpm, "_h_", current_h, "field_direction_", dirString)
-        simulated_annealing_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, current_h, n, T0, Target, L, S, tosave, outprefix)
-    end
-end
+#     currJH = param_config[leftK+1:rightK]
+#     for i in currJH
+#         current_Jpm = i[1]
+#         current_h = i[2]
+#         Jxx = -2*(current_Jpm + Jpmpm)
+#         Jyy = 1.0
+#         Jzz = 2*(Jpmpm - current_Jpm)
+#         outprefix   = string("Jpm_", current_Jpm, "_Jpmpm_", Jpmpm, "_h_", current_h, "field_direction_", dirString)
+#         simulated_annealing_pyrochlore(Jxx, Jyy, Jzz, gxx, gyy, gzz, current_h, n, T0, Target, L, S, tosave, outprefix)
+#     end
+# end
 
 # run_pyrochlore(-0.6, 1.0, -0.6, 0, 0, 1, 0.0, [1, 1, 1]/sqrt(3), 1e-7, 1, 1/2, "test", "")
 
