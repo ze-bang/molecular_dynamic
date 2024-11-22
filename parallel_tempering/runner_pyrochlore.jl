@@ -1,10 +1,12 @@
-# using Pkg
-# Pkg.add(path="/home/zhouzb79/projects/def-ybkim/zhouzb79/molecular_dynamics/ClassicalSpinMC.jl")
-# Pkg.add("DifferentialEquations")
-# Pkg.add("LinearAlgebra")
-# Pkg.add("HDF5")
-# Pkg.add("Einsum")
-# Pkg.add("MPI")
+import Pkg
+Pkg.add(path="/home/zhouzb79/projects/def-ybkim/zhouzb79/molecular_dynamics/ClassicalSpinMC.jl")
+Pkg.add("DifferentialEquations")
+Pkg.add("LinearAlgebra")
+Pkg.add("HDF5")
+Pkg.add("Einsum")
+Pkg.add("MPI")
+
+using MPI
 
 # MPI.Init()
 # comm = MPI.COMM_WORLD
